@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Noob Boombox</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Boombox">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#1b1d22">
 <style>
   body { margin: 0; padding: 16px; background: #1b1d22; color: #fff; font-family: "Arial Black", Arial, sans-serif; }
   main { max-width: 600px; margin: 0 auto; }
@@ -11,7 +18,8 @@
   h2 { font-size: 1rem; color: #aaa; margin: 20px 0 8px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
   button { font: inherit; font-size: 1rem; padding: 18px 10px; border: 3px solid #000; border-radius: 6px;
-           background: #00a2ff; color: #fff; cursor: pointer; box-shadow: 0 4px 0 #000; }
+           background: #00a2ff; color: #fff; cursor: pointer; box-shadow: 0 4px 0 #000;
+           touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   button:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
   button.playing { background: #00b06f; }
   .player { position: sticky; top: 0; background: #2a2d34; border: 3px solid #000; border-radius: 6px; padding: 12px; }
@@ -20,11 +28,13 @@
   .row input { flex: 1; }
   #toggle { padding: 10px 16px; background: #e2231a; }
   #time { font-family: monospace; font-size: 0.9rem; white-space: nowrap; }
+  #offline { text-align: center; color: #888; font-size: 0.8rem; margin: -8px 0 12px; }
 </style>
 </head>
 <body>
 <main>
   <h1>Noob Boombox</h1>
+  <p id="offline">Saving for offline…</p>
 
   <div class="player">
     <div id="now">Nothing playing</div>
@@ -33,7 +43,7 @@
       <input id="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Seek">
       <span id="time">0:00 / 0:00</span>
     </div>
-    <div class="row">
+    <div class="row" id="volrow">
       <label for="vol">Vol</label>
       <input id="vol" type="range" min="0" max="1" step="0.01" value="1">
     </div>
@@ -44,20 +54,8 @@
 
 <audio id="audio"></audio>
 
+<script src="sounds.js"></script>
 <script>
-// Browsers can't list folders, so add new sounds here (one line each).
-const SOUNDS = {
-  Songs: [
-    { name: 'Life of a Noob', file: 'songs/life_of_a_noob.mp3' },
-    { name: 'Monster Mash',   file: 'songs/monster_mash.mp3' },
-    { name: 'Raining Tacos',  file: 'songs/raining_tacos.mp3' },
-  ],
-  SFX: [
-    { name: 'Bloxy Cola', file: 'sfx/bloxy_cola.mp3' },
-    { name: 'Oof',        file: 'sfx/oof.mp3' },
-  ],
-};
-
 const audio = document.getElementById('audio');
 const seek = document.getElementById('seek');
 const time = document.getElementById('time');
@@ -103,6 +101,17 @@ audio.ontimeupdate = () => { seek.value = audio.currentTime; showTime(); };
 audio.onplay = () => toggle.textContent = '⏸';
 audio.onpause = () => toggle.textContent = '▶';
 audio.onended = () => current?.classList.remove('playing');
+
+// iPhones ignore page volume (use the phone's buttons), so hide the slider there.
+audio.volume = 0.5;
+if (audio.volume !== 0.5) document.getElementById('volrow').hidden = true;
+audio.volume = 1;
+
+const offline = document.getElementById('offline');
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(() => offline.textContent = 'Offline save failed (needs https)');
+  navigator.serviceWorker.ready.then(() => offline.textContent = '✓ Ready offline');
+} else offline.textContent = 'Offline not supported here';
 </script>
 </body>
 </html>
