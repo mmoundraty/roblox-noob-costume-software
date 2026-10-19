@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Noob Boombox</title>
+<style>
+  body { margin: 0; padding: 16px; background: #1b1d22; color: #fff; font-family: "Arial Black", Arial, sans-serif; }
+  main { max-width: 600px; margin: 0 auto; }
+  h1 { text-align: center; color: #f5cd30; text-shadow: 3px 3px 0 #000; margin: 8px 0 16px; }
+  h2 { font-size: 1rem; color: #aaa; margin: 20px 0 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  button { font: inherit; font-size: 1rem; padding: 18px 10px; border: 3px solid #000; border-radius: 6px;
+           background: #00a2ff; color: #fff; cursor: pointer; box-shadow: 0 4px 0 #000; }
+  button:active { transform: translateY(3px); box-shadow: 0 1px 0 #000; }
+  button.playing { background: #00b06f; }
+  .player { position: sticky; top: 0; background: #2a2d34; border: 3px solid #000; border-radius: 6px; padding: 12px; }
+  #now { margin-bottom: 8px; color: #f5cd30; }
+  .row { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .row input { flex: 1; }
+  #toggle { padding: 10px 16px; background: #e2231a; }
+  #time { font-family: monospace; font-size: 0.9rem; white-space: nowrap; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Noob Boombox</h1>
+
+  <div class="player">
+    <div id="now">Nothing playing</div>
+    <div class="row">
+      <button id="toggle" aria-label="Play or pause">▶</button>
+      <input id="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Seek">
+      <span id="time">0:00 / 0:00</span>
+    </div>
+    <div class="row">
+      <label for="vol">Vol</label>
+      <input id="vol" type="range" min="0" max="1" step="0.01" value="1">
+    </div>
+  </div>
+
+  <div id="sections"></div>
+</main>
+
+<audio id="audio"></audio>
+
+<script>
+// Browsers can't list folders, so add new sounds here (one line each).
+const SOUNDS = {
+  Songs: [
+    { name: 'Life of a Noob', file: 'songs/life_of_a_noob.mp3' },
+    { name: 'Monster Mash',   file: 'songs/monster_mash.mp3' },
+    { name: 'Raining Tacos',  file: 'songs/raining_tacos.mp3' },
+  ],
+  SFX: [
+    { name: 'Bloxy Cola', file: 'sfx/bloxy_cola.mp3' },
+    { name: 'Oof',        file: 'sfx/oof.mp3' },
+  ],
+};
+
+const audio = document.getElementById('audio');
+const seek = document.getElementById('seek');
+const time = document.getElementById('time');
+const toggle = document.getElementById('toggle');
+const now = document.getElementById('now');
+let current = null; // button of the current sound
+
+const fmt = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00';
+const showTime = () => time.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
+
+function play(sound, btn) {
+  // Changing src stops whatever was playing before.
+  if (current !== btn) audio.src = sound.file;
+  audio.currentTime = 0;
+  audio.play();
+  current?.classList.remove('playing');
+  btn.classList.add('playing');
+  current = btn;
+  now.textContent = '♪ ' + sound.name;
+}
+
+const sections = document.getElementById('sections');
+for (const [title, list] of Object.entries(SOUNDS)) {
+  const h = document.createElement('h2');
+  h.textContent = title;
+  const grid = document.createElement('div');
+  grid.className = 'grid';
+  for (const sound of list) {
+    const btn = document.createElement('button');
+    btn.textContent = sound.name;
+    btn.onclick = () => play(sound, btn);
+    grid.append(btn);
+  }
+  sections.append(h, grid);
+}
+
+toggle.onclick = () => { if (audio.src) audio.paused ? audio.play() : audio.pause(); };
+seek.oninput = () => { audio.currentTime = seek.value; showTime(); };
+document.getElementById('vol').oninput = e => audio.volume = e.target.value;
+
+audio.onloadedmetadata = () => { seek.max = audio.duration; showTime(); };
+audio.ontimeupdate = () => { seek.value = audio.currentTime; showTime(); };
+audio.onplay = () => toggle.textContent = '⏸';
+audio.onpause = () => toggle.textContent = '▶';
+audio.onended = () => current?.classList.remove('playing');
+</script>
+</body>
+</html>
