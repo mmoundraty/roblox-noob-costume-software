@@ -17,14 +17,15 @@ sw.js           saves all files on the phone for offline use
 manifest.json   app name/icon for the home screen
 icon.png        app icon
 sw.test.js      check: `node sw.test.js`
+.github/workflows/pages.yml   deploys to GitHub Pages on every push
 songs/          music (mp3)
 sfx/            sound effects (mp3)
 ```
 
 ## Install on iPhone
 You only need internet the first time.
-1. Commit and push everything to GitHub.
-2. On GitHub, go to Settings → Pages, then set the source to `main` / root. Wait a minute for the site to go live.
+1. On GitHub, go to Settings → Pages, then set **Source** to **GitHub Actions** (one-time setup).
+2. Push to `main`. Wait for the green check in the repo's **Actions** tab (about a minute).
 3. On the iPhone, open the Pages URL in **Safari** (`https://mmoundraty.github.io/roblox-noob-costume-software/`).
 4. Tap **Share → Add to Home Screen**.
 5. Open the **Boombox** app from the home screen **once while online**, and wait until it says **✓ Ready offline**.
@@ -43,6 +44,8 @@ Tips:
    { name: 'Button Label', file: 'sfx/my_sound.mp3' },
    ```
    Browsers can't list a folder's files, so a sound only shows up once it's in this list.
-3. In `sw.js`, bump `VERSION` (for example `'v1'` → `'v2'`). Without this, the phone keeps playing its old saved copy.
-4. Run `node sw.test.js`. It catches typos in file names, which would otherwise break offline saving.
-5. Push, then open the app once while online. Close it and open it again to pick up the update.
+3. Optional: run `node sw.test.js` to catch file-name typos. The deploy runs this check too and stops if it fails.
+4. Push. Once the Actions run is green, open the app once while online, then close it and open it again to pick up the update.
+
+## Updates
+Every push to `main` deploys automatically. The deploy writes the commit ID into `VERSION` in `sw.js`, so phones always know there's something new. You never need to edit `VERSION` yourself.

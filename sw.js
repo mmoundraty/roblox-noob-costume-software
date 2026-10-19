@@ -1,6 +1,7 @@
 // Saves every file on the phone so the app works offline.
-// Bump VERSION whenever you change any file, so the phone downloads the new copy.
-const VERSION = 'v1';
+// VERSION is replaced with the commit ID on deploy (.github/workflows/pages.yml),
+// which makes phones download the new copy. Leave this line's format as is.
+const VERSION = 'dev';
 
 importScripts('sounds.js');
 const FILES = ['./', 'index.html', 'sounds.js', 'manifest.json', 'icon.png',
