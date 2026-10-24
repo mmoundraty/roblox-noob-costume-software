@@ -5,7 +5,7 @@ Software for the noob costume, in case the hardware doesn't work. It's a web sou
 - One button per sound, split into **Songs** and **SFX**
 - Pressing a button stops the current sound and plays the new one; pressing the same button again restarts it
 - Seek bar to jump to any point in whatever is playing, with a `current / total` time display
-- Play/pause button, plus a volume slider on computers (iPhones use the phone's volume buttons)
+- Play/pause button and a volume slider (works on iPhone too)
 - Installs to the iPhone home screen and works with **no internet** once saved
 - Big buttons that work on a phone, and the player stays pinned to the top of the screen
 
@@ -32,7 +32,7 @@ You only need internet the first time.
 6. Test it: turn on Airplane Mode (Bluetooth can stay on), open the app, and play a song.
 
 Tips:
-- Sounds play even when the ring/silent switch is on silent. Set loudness with the phone's volume buttons.
+- Sounds play even when the ring/silent switch is on silent (iOS 17+). The slider sets the app's volume relative to the phone's; the phone's volume buttons set the overall maximum.
 - Audio may stop if you lock the phone or switch apps. Keep the app open on screen.
 
 **On a computer:** double-click `index.html`. Offline saving only works from the https site, not from a double-clicked file.

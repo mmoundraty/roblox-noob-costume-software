@@ -43,7 +43,7 @@
       <input id="seek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Seek">
       <span id="time">0:00 / 0:00</span>
     </div>
-    <div class="row" id="volrow">
+    <div class="row">
       <label for="vol">Vol</label>
       <input id="vol" type="range" min="0" max="1" step="0.01" value="1">
     </div>
@@ -61,13 +61,32 @@ const seek = document.getElementById('seek');
 const time = document.getElementById('time');
 const toggle = document.getElementById('toggle');
 const now = document.getElementById('now');
+const vol = document.getElementById('vol');
 let current = null; // button of the current sound
+
+// iPhones ignore audio.volume, so route the sound through Web Audio and set the gain instead.
+// Browsers only allow this to start inside a tap, so it runs on the first play.
+let ctx, gain;
+function startAudio() {
+  if (location.protocol === 'file:') return; // Chrome mutes Web Audio on double-clicked files; audio.volume works there
+  if (!ctx) {
+    // Keep playing when the iPhone's silent switch is on (iOS 17+).
+    if (navigator.audioSession) navigator.audioSession.type = 'playback';
+    ctx = new AudioContext();
+    gain = ctx.createGain();
+    gain.gain.value = vol.value;
+    audio.volume = 1; // gain does the volume from now on
+    ctx.createMediaElementSource(audio).connect(gain).connect(ctx.destination);
+  }
+  if (ctx.state !== 'running') ctx.resume(); // iOS pauses it when the app goes to the background
+}
 
 const fmt = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '0:00';
 const showTime = () => time.textContent = `${fmt(audio.currentTime)} / ${fmt(audio.duration)}`;
 
 function play(sound, btn) {
   // Changing src stops whatever was playing before.
+  startAudio();
   if (current !== btn) audio.src = sound.file;
   audio.currentTime = 0;
   audio.play();
@@ -92,20 +111,19 @@ for (const [title, list] of Object.entries(SOUNDS)) {
   sections.append(h, grid);
 }
 
-toggle.onclick = () => { if (audio.src) audio.paused ? audio.play() : audio.pause(); };
+toggle.onclick = () => {
+  if (!audio.src) return;
+  startAudio();
+  audio.paused ? audio.play() : audio.pause();
+};
 seek.oninput = () => { audio.currentTime = seek.value; showTime(); };
-document.getElementById('vol').oninput = e => audio.volume = e.target.value;
+vol.oninput = () => { if (gain) gain.gain.value = vol.value; else audio.volume = vol.value; };
 
 audio.onloadedmetadata = () => { seek.max = audio.duration; showTime(); };
 audio.ontimeupdate = () => { seek.value = audio.currentTime; showTime(); };
 audio.onplay = () => toggle.textContent = '⏸';
 audio.onpause = () => toggle.textContent = '▶';
 audio.onended = () => current?.classList.remove('playing');
-
-// iPhones ignore page volume (use the phone's buttons), so hide the slider there.
-audio.volume = 0.5;
-if (audio.volume !== 0.5) document.getElementById('volrow').hidden = true;
-audio.volume = 1;
 
 const offline = document.getElementById('offline');
 if ('serviceWorker' in navigator) {
